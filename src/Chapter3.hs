@@ -344,6 +344,14 @@ of a book, but you are not limited only by the book properties we described.
 Create your own book type of your dreams!
 -}
 
+data Book = MkBook
+  { bookName      :: String
+    , bookDescription :: String
+    , bookAuthor :: String
+    , bookGenre :: String
+    , bookPrice :: Double
+  } deriving (Show)
+
 {- |
 =⚔️= Task 2
 
@@ -373,6 +381,28 @@ after the fight. The battle has the following possible outcomes:
    doesn't earn any money and keeps what they had before.
 
 -}
+
+data Knight = MkKnight
+  { knightHealth :: Int
+    , knightAttack :: Int
+    , knightGold :: Int
+  } deriving (Show)
+
+data Monster = MkMonster
+  { monsterHealth :: Int
+    , monsterAttack :: Int
+    , monsterGold :: Int
+  } deriving (Show)
+
+fight :: Knight -> Monster -> Int
+fight k m = calculateWinner (knightHealth k) (knightAttack k) (knightGold k) (monsterHealth m) (monsterAttack m) (monsterGold m)
+  where
+    calculateWinner :: Int -> Int -> Int -> Int -> Int -> Int -> Int
+    calculateWinner kh ka kg mh ma mg
+      | ka <= 0 && ma <= 0 = kg
+      | div mh ka <= div kh ma = mg + kg
+      | otherwise = -1
+
 
 {- |
 =🛡= Sum types
@@ -459,7 +489,13 @@ and provide more flexibility when working with data types.
 Create a simple enumeration for the meal types (e.g. breakfast). The one who
 comes up with the most number of names wins the challenge. Use your creativity!
 -}
-
+data MealType
+    = Breakfast
+    | Lunch
+    | Dinner
+    | Brunch
+    | Elevenses
+    | Supper
 {- |
 =⚔️= Task 4
 
@@ -479,6 +515,42 @@ After defining the city, implement the following functions:
    complicated task, walls can be built only if the city has a castle
    and at least 10 living __people__ inside in all houses of the city in total.
 -}
+
+data Person = MkPerson
+ {personName :: String} 
+ deriving (Show)
+data House = MkHouse
+ {people :: [Person]}
+ deriving (Show)
+
+data MainBuilding
+  = Library
+  | Church
+  deriving (Show)
+
+data Castle = MkCastle
+ {castleName :: String }
+ deriving (Show)
+
+data City = MkCity
+ { cityCastle :: Maybe Castle
+   , cityWall :: Maybe String
+   , cityMainBuilding :: MainBuilding
+   , cityHouses :: [House]
+ } deriving (Show)
+
+buildCastle :: String -> City -> City
+buildCastle castleGivenName city = city {cityCastle = 
+  case cityCastle city of 
+    Nothing -> Just MkCastle {castleName = castleGivenName}
+    _ ->  cityCastle city 
+    }
+
+buildHouse :: City -> City
+buildHouse city = city {cityHouses = (cityHouses city ++ [MkHouse {people = []}])}
+
+
+buildWalls
 
 {-
 =🛡= Newtypes
