@@ -550,7 +550,12 @@ buildHouse :: City -> City
 buildHouse city = city {cityHouses = (cityHouses city ++ [MkHouse {people = []}])}
 
 
-buildWalls
+buildWalls :: City -> City
+buildWalls city = city { cityWall = 
+  case cityCastle city of 
+    Nothing -> Nothing
+    _ ->  Just "MyWall"
+    }
 
 {-
 =🛡= Newtypes
@@ -633,21 +638,42 @@ introducing extra newtypes.
     implementation of the "hitPlayer" function at all!
 -}
 data Player = Player
-    { playerHealth    :: Int
-    , playerArmor     :: Int
-    , playerAttack    :: Int
-    , playerDexterity :: Int
-    , playerStrength  :: Int
+    { playerHealth    :: Health
+    , playerArmor     :: Armor
+    , playerAttack    :: Attack
+    , playerDexterity :: Dexterity
+    , playerStrength  :: Strength
     }
 
-calculatePlayerDamage :: Int -> Int -> Int
-calculatePlayerDamage attack strength = attack + strength
+newtype Attack = MkAttack
+    { getAttack :: Int
+    }
+newtype Strength = MkStrength
+    { getStrength :: Int
+    }
+newtype Armor = MkArmor
+    { getArmor :: Int
+    }
+newtype Dexterity = MkDexterity
+    { getDexterity :: Int
+    }
+newtype Damage = MkDamage
+    { getDamage :: Int
+    }
+newtype Defense = MkDefense
+    { getDefense :: Int
+    }
+newtype Health = MkHealth
+    { getHealth :: Int
+    }
+calculatePlayerDamage :: Attack -> Strength -> Damage
+calculatePlayerDamage a s = MkDamage (getAttack a +  getStrength s)
 
-calculatePlayerDefense :: Int -> Int -> Int
-calculatePlayerDefense armor dexterity = armor * dexterity
+calculatePlayerDefense :: Armor -> Dexterity -> Defense
+calculatePlayerDefense a d = MkDefense (getArmor a * getDexterity d)
 
-calculatePlayerHit :: Int -> Int -> Int -> Int
-calculatePlayerHit damage defense health = health + defense - damage
+calculatePlayerHit :: Damage -> Defense -> Health -> Health
+calculatePlayerHit dmg df ht = MkHealth (getHealth ht + getDefense df - getDamage dmg)
 
 -- The second player hits first player and the new first player is returned
 hitPlayer :: Player -> Player -> Player
@@ -825,6 +851,19 @@ parametrise data types in places where values can be of any general type.
   maybe-treasure ;)
 -}
 
+data Dragon a = MkDragon
+  { 
+    dragonMagicalPower :: a
+  }
+data TreasureChest a = MkTreasureChest
+  {
+    chestTreasures :: Maybe [a]
+  }
+
+data DragonLair a = MkDragonLair
+  {
+    lairDragon :: Dragon a
+  }
 {-
 =🛡= Typeclasses
 
@@ -979,9 +1018,31 @@ Implement instances of "Append" for the following types:
   ✧ *(Challenge): "Maybe" where append is appending of values inside "Just" constructors
 
 -}
+
+newtype Gold = MkGold
+    { 
+      getGold :: Int
+    }
+  
+
 class Append a where
     append :: a -> a -> a
 
+instance Append Gold where
+    append :: Gold -> Gold -> Gold
+    append x y = MkGold (getGold x + getGold y) 
+
+
+instance Append [a] where
+    append :: [a] -> [a] -> [a]
+    append l1 l2 = l1 ++ l2
+
+instance (Append a) => Append (Maybe a) where
+    append :: Maybe a -> Maybe a -> Maybe a
+    append (Just x) (Just y)  = append (Just x) (Just y) 
+    append Nothing (Just y) = Just y
+    append (Just x) Nothing = Just x
+    append _ _ = Nothing
 
 {-
 =🛡= Standard Typeclasses and Deriving
@@ -1042,6 +1103,29 @@ implement the following functions:
 
 🕯 HINT: to implement this task, derive some standard typeclasses
 -}
+data Day
+    = Monday
+    | Tuesday
+    | Wednesday
+    | Thursday
+    | Friday
+    | Saturday
+    | Sunday
+  deriving (Show, Read, Eq, Ord, Enum)
+
+isWeekend :: Day -> Bool
+isWeekend day = day > Friday
+
+nextDay :: Day -> Day
+nextDay Sunday = Monday
+nextDay day = succ day 
+
+daysToParty :: Day -> Int
+daysToParty Friday = 0
+daysToParty day = go 0 day
+  where
+    go :: Int -> Day -> Int
+    go count day = if day == Friday then count else go (count + 1) (nextDay day)
 
 {-
 =💣= Task 9*
